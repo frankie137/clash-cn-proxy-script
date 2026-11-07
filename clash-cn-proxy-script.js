@@ -34,12 +34,17 @@ function main(config, profileName) {
     "IP-CIDR6,fc00::/7,DIRECT,no-resolve",
     "IP-CIDR6,fe80::/10,DIRECT,no-resolve",
     "RULE-SET,cn-domain,DIRECT",
-    "RULE-SET,cn-ip,DIRECT",
+    "RULE-SET,cn-ip,DIRECT,no-resolve",
     "MATCH," + PROXY_GROUP
   ];
   const dns = config.dns || {};
   const domesticDns = ["https://dns.alidns.com/dns-query", "https://doh.pub/dns-query"];
   dns["default-nameserver"] = ["223.5.5.5", "119.29.29.29"];
+  dns["respect-rules"] = true;
+  dns["follow-rule"] = true;
+  if (!dns["proxy-server-nameserver"] || dns["proxy-server-nameserver"].length === 0) {
+    dns["proxy-server-nameserver"] = ["223.5.5.5", "119.29.29.29"];
+  }
   dns["nameserver-policy"] = Object.assign({}, dns["nameserver-policy"] || {}, {
     "rule-set:cn-domain": domesticDns
   });

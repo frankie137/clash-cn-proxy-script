@@ -27,6 +27,8 @@ Rules are evaluated in this order; the first match wins.
 
 The local rules include IPv4 and IPv6 ranges. The script preserves your subscription's IPv6 setting.
 
+The China IP rule uses `no-resolve`. It matches requests that already have a destination IP. Domain requests skip this IP rule, so China-listed domains use the earlier domain rule and other domains reach the proxy fallback without an extra local DNS lookup.
+
 China domain and IP data come from [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat). Mihomo downloads the compact MRS rule sets through your proxy group and checks for updates every **24 hours**. Classification depends on these community-maintained lists.
 
 ## Quick start
@@ -54,6 +56,8 @@ Clash Verge Rev reapplies the subscription extension when regenerating the confi
 - China-listed domains use AliDNS and DNSPod DNS-over-HTTPS resolvers.
 - Direct connections also use these domestic resolvers, with DNS policy following enabled.
 - Bootstrap resolvers are `223.5.5.5` and `119.29.29.29`.
+- DNS connections follow routing rules through Mihomo's `respect-rules`; `follow-rule` is also set for Stash-compatible exported configurations. The script itself runs in Clash Verge Rev's JavaScript extension environment.
+- Proxy-server domain resolution uses an independent resolver list to avoid recursive proxy resolution. An existing nonempty `proxy-server-nameserver` is retained; otherwise, the script sets `223.5.5.5` and `119.29.29.29`.
 - Existing default nameservers, DNS enablement, enhanced mode, and unrelated DNS policies are preserved.
 
 The script adds or replaces the `cn-domain` and `cn-ip` rule providers. It does not change proxy node definitions, proxy group membership, proxy credentials, subscription URLs, listening ports, or TUN settings. Select a working proxy node in your group; choosing `DIRECT` in that group would make fallback traffic direct too.

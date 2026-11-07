@@ -29,7 +29,7 @@ test("local exceptions precede China rules and the final proxy fallback", () => 
   assert.ok(result.rules.slice(0, 9).every(rule => rule.endsWith(",DIRECT,no-resolve")));
   assert.deepEqual(result.rules.slice(-3), [
     "RULE-SET,cn-domain,DIRECT",
-    "RULE-SET,cn-ip,DIRECT",
+    "RULE-SET,cn-ip,DIRECT,no-resolve",
     "MATCH,PROXY",
   ]);
   assert.ok(!result.rules.some(rule => rule.includes("old.example")));
@@ -70,6 +70,7 @@ test("domestic DNS is added without replacing unrelated DNS policies", () => {
     enable: true,
     "enhanced-mode": "fake-ip",
     nameserver: ["https://1.1.1.1/dns-query"],
+    "proxy-server-nameserver": ["192.0.2.53"],
     "nameserver-policy": { "+.example.org": ["192.0.2.53"] },
   };
   const result = apply(config);
@@ -81,10 +82,19 @@ test("domestic DNS is added without replacing unrelated DNS policies", () => {
     "https://dns.alidns.com/dns-query", "https://doh.pub/dns-query",
   ]);
   assert.equal(result.dns["direct-nameserver-follow-policy"], true);
+  assert.equal(result.dns["respect-rules"], true);
+  assert.equal(result.dns["follow-rule"], true);
+  assert.deepEqual(result.dns["proxy-server-nameserver"], ["192.0.2.53"]);
 });
 
-test("a missing DNS block is supported", () => {
-  assert.deepEqual(apply(profile()).dns["default-nameserver"], ["223.5.5.5", "119.29.29.29"]);
+test("missing and empty proxy-server DNS settings get independent bootstrap resolvers", () => {
+  for (const dns of [undefined, {}, { "proxy-server-nameserver": [] }]) {
+    const config = profile();
+    config.dns = dns;
+    const result = apply(config);
+    assert.deepEqual(result.dns["default-nameserver"], ["223.5.5.5", "119.29.29.29"]);
+    assert.deepEqual(result.dns["proxy-server-nameserver"], ["223.5.5.5", "119.29.29.29"]);
+  }
 });
 
 test("missing or incorrect proxy groups fail before altering the config", () => {
